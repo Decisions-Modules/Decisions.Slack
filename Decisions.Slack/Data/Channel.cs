@@ -1,14 +1,14 @@
 ﻿using System.Runtime.Serialization;
 
-namespace SlackClient.Entities
+namespace Decisions.Slack.Data
 {
     [DataContract]
     public class Channel
     {
         [DataMember(Name = "Id")]
-        public string id { get; set; }
+        public string Id { get; set; }
 
         [DataMember(Name = "Name")]
-        public string name { get; set; }
+        public string Name { get; set; }
     }
 }

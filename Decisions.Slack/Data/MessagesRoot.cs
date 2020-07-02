@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace SlackClient.Entities
+namespace Decisions.Slack.Data
 {
     [DataContract]
     public class MessagesRoot

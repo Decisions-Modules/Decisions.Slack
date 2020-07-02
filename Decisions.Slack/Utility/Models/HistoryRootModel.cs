@@ -1,4 +1,4 @@
-﻿namespace SlackClient.Models
+﻿namespace Decisions.Slack.Models
 {
     internal class HistoryRootModel
     {

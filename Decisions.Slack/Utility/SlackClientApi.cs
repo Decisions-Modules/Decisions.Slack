@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using Newtonsoft.Json;
-using SlackClient.Entities;
-using SlackClient.Models;
+using Decisions.Slack.Data;
+using Decisions.Slack.Models;
 
-namespace SlackClient
+namespace Decisions.Slack
 {
     internal static class SlackEndpointNames
     {
@@ -21,6 +21,7 @@ namespace SlackClient
         public const string deleteMsgFromChannel = "chat.delete";
         public const string usersInfo = "users.info";
         public const string pinMsgToChannel = "pins.add";
+        public const string removePinMsgToChannel = "pins.remove";
     }
 
     public static class SlackClientApi
@@ -34,7 +35,7 @@ namespace SlackClient
         /// <param name="token"></param>
         /// <param name="channelName"></param>
         /// <returns></returns>
-        private static string GetChannelIdByName(string token, string channelName)
+        public static string GetChannelIdByName(string token, string channelName)
         {
             var dict = GetChannelsDictionary(token);
 
@@ -71,14 +72,17 @@ namespace SlackClient
         {
             var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
 
-            var response = httpClient.GetStringAsync($"{SlackEndpointNames.conversationsList}?token={token}")
+            /*var response = httpClient.GetStringAsync($"{SlackEndpointNames.conversationsList}?token={token}")
                 .GetAwaiter()
-                .GetResult();
+                .GetResult();*/
+            var rowResponse = httpClient.GetAsync($"{SlackEndpointNames.conversationsList}?token={token}").Result;
+            var response = rowResponse.Content.ReadAsStringAsync().Result;
+
             CheckErrorAndReturnModel(response);
 
             var channels =
                 JsonConvert.DeserializeObject<ChannelsListWithOkModel>(response);
-            var list = channels.channels.Select(x => new Channel { id = x.id, name = x.name }).ToList();
+            var list = channels.channels.Select(x => new Channel { Id = x.id, Name = x.name }).ToList();
 
             return list.ToArray();
         }
@@ -196,6 +200,34 @@ namespace SlackClient
         }
 
         /// <summary>
+        /// Pin message to channel 
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="channelName">name of channel</param>
+        /// <param name="timestamp">timestamp of message</param>
+        public static bool UnpinMessageToChannelByChannelName(string token, string channelName, string timestamp)
+        {
+            string channelId = GetChannelIdByName(token, channelName);
+            return UnpinMessageToChannelByChannelId(token, channelId, timestamp);
+        }
+
+        public static bool UnpinMessageToChannelByChannelId(string token, string channelId, string timestamp)
+        {
+            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
+
+            var responseMessage = httpClient
+                .PostAsync(
+                    $"{SlackEndpointNames.removePinMsgToChannel}?token={token}&channel={channelId}&timestamp={timestamp}",
+                    null)
+                .GetAwaiter().GetResult();
+            var response = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            var model = CheckErrorAndReturnModel(response);
+            return model.ok;
+        }
+
+
+
+        /// <summary>
         /// Delete message from channel
         /// </summary>
         /// <param name="token"></param>
@@ -254,12 +286,12 @@ namespace SlackClient
         /// <param name="token"></param>
         /// <param name="textToSearch"></param>
         /// <returns></returns>
-        public static Matches[] SearchForTextInChannels(string token, string textToSearch)
+        public static Matches[] SearchForTextInChannels(string token, string textToSearch, int count = 20, int page = 1)
         {
             var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
 
             var responseMessage = httpClient
-                .GetStringAsync($"{SlackEndpointNames.searchInChannels}?token={token}&query={textToSearch}")
+                .GetStringAsync($"{SlackEndpointNames.searchInChannels}?token={token}&query={textToSearch}&count={count}&page={page}")
                 .GetAwaiter()
                 .GetResult();
             CheckErrorAndReturnModel(responseMessage);

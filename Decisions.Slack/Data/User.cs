@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace SlackClient.Entities
+namespace Decisions.Slack.Data
 {
     [DataContract]
     public class User
@@ -10,8 +10,8 @@ namespace SlackClient.Entities
 
         [DataMember(Name = "Id")]
         public string id { get; set; }
-        
+
         [DataMember(Name = "Name")]
-        public string name { get; set; }   
+        public string name { get; set; }
     }
 }

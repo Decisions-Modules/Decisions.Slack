@@ -1,8 +1,8 @@
 ﻿using System.Linq;
-using SlackClient.Entities;
-using SlackClient.Models;
+using Decisions.Slack.Data;
+using Decisions.Slack.Models;
 
-namespace SlackClient
+namespace Decisions.Slack
 {
     internal static class Mapper
     {
@@ -18,8 +18,8 @@ namespace SlackClient
                     {
                         channel = new Channel
                         {
-                            id = x.channel.id,
-                            name = x.channel.name
+                            Id = x.channel.id,
+                            Name = x.channel.name
                         },
                         iid = x.iid,
                         permalink = x.permalink,
