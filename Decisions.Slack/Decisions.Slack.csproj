@@ -41,30 +41,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Data\Channel.cs" />
-    <Compile Include="Data\ChannelsList.cs" />
-    <Compile Include="Data\HistoryRoot.cs" />
-    <Compile Include="Data\Matches.cs" />
-    <Compile Include="Data\MembersRoot.cs" />
-    <Compile Include="Data\Message.cs" />
-    <Compile Include="Data\MessagesRoot.cs" />
-    <Compile Include="Data\MessagesSearch.cs" />
-    <Compile Include="Data\RootUserInfo.cs" />
-    <Compile Include="Data\User.cs" />
+    <Compile Include="Data\SlackChannel.cs" />
+    <Compile Include="Data\SlackException.cs" />
+    <Compile Include="Data\SlackMatches.cs" />
+    <Compile Include="Data\SlackMessage.cs" />
+    <Compile Include="Data\SlackUser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utility\Mapper.cs" />
-    <Compile Include="Utility\Models\ChannelModel.cs" />
-    <Compile Include="Utility\Models\ChannelsListWithOkModel.cs" />
-    <Compile Include="Utility\Models\ErrorModel.cs" />
-    <Compile Include="Utility\Models\HistoryRootModel.cs" />
-    <Compile Include="Utility\Models\MatchesModel.cs" />
-    <Compile Include="Utility\Models\MembersRootModel.cs" />
-    <Compile Include="Utility\Models\MessageModel.cs" />
-    <Compile Include="Utility\Models\MessagesRootModel.cs" />
-    <Compile Include="Utility\Models\MessagesSearchModel.cs" />
-    <Compile Include="Utility\Models\RootUserInfoModel.cs" />
-    <Compile Include="Utility\Models\UserModel.cs" />
+    <Compile Include="Data\SlackResponseModel.cs" />
     <Compile Include="Utility\SlackClientApi.cs" />
+    <Compile Include="Utility\SlackClientApiBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="DecisionsSDK">

@@ -4,14 +4,20 @@ using System.Linq;
 using System.Net.Http;
 using Newtonsoft.Json;
 using Decisions.Slack.Data;
-using Decisions.Slack.Models;
+using Decisions.Slack.Utility;
+using Microsoft.Win32.SafeHandles;
+using System.Text;
+using System.Threading;
+using System.Runtime.CompilerServices;
+using DecisionsFramework.ServiceLayer.Services.DBQuery;
 
-namespace Decisions.Slack
+namespace Decisions.Slack.Utility
 {
     internal static class SlackEndpointNames
     {
         public const string postMessage = "chat.postMessage";
-        public const string addChannel = "conversations.create";
+        public const string createChannel = "conversations.create";
+        public const string inviteToChannel = "conversations.invite";
         public const string conversationsList = "conversations.list";
         public const string conversationsMembers = "conversations.members";
         public const string conversationsHistory = "conversations.history";
@@ -24,340 +30,338 @@ namespace Decisions.Slack
         public const string removePinMsgToChannel = "pins.remove";
     }
 
-    public static class SlackClientApi
+    public static partial class SlackClientApi
     {
-        private static readonly string baseAdress = "https://slack.com/api/";
-
+        private static int _paginationLimit = 100;
+        public static int PaginationLimit
+        {
+            get => _paginationLimit;
+            set
+            {
+                if (value > 1000) value = 1000;
+                if (value < 1) value = 1;
+                _paginationLimit = value;
+            }
+        }
 
         /// <summary>
         ///     Get channel id by the channel name. Can be used for convenience
         /// </summary>
-        /// <param name="token"></param>
+        /// <param name="token">Access token</param>
         /// <param name="channelName"></param>
         /// <returns></returns>
         public static string GetChannelIdByName(string token, string channelName)
         {
             var dict = GetChannelsDictionary(token);
 
-            var channelId = dict.FirstOrDefault(x => x.Value == channelName).Key;
+            string channelId = null;
+            dict.TryGetValue(channelName, out channelId);
 
             return channelId;
         }
 
         /// <summary>
+        /// Get channels list
+        /// https://api.slack.com/methods/conversations.list
+        /// </summary>
+        /// <param name="token">Access token</param>
+        /// <param name="excludeArchived">Do not return archieved channels</param>
+        /// <returns>Array of channels model</returns>
+        public static SlackChannel[] GetChannelsList(string token, bool excludeArchived)
+        {
+            List<SlackChannel> channels = new List<SlackChannel>();
+
+            ChannelsListResponseModel response = GetRequest<ChannelsListResponseModel>(token, $"{SlackEndpointNames.conversationsList}?exclude_archived={excludeArchived}&limit={PaginationLimit}");
+            channels.AddRange(response.Channels);
+            while (response.Metadata != null && !String.IsNullOrEmpty(response.Metadata.NextCursor))
+            {
+                response = GetRequest<ChannelsListResponseModel>(token, $"{SlackEndpointNames.conversationsList}?exclude_archived={excludeArchived}&limit={PaginationLimit}&cursor={response.Metadata.NextCursor}");
+                channels.AddRange(response.Channels);
+            }
+
+            return channels.ToArray();
+        }
+
+        /// <summary>
         /// Create channel
+        /// https://api.slack.com/methods/conversations.create
         /// </summary>
         /// <param name="token">token</param>
         /// <param name="name">name of channel</param>
+        /// <param name="isPrivate">create a private channel</param>
         /// <returns></returns>
-        public static bool CreateChannel(string token, string name)
+        public static SlackChannel CreateChannel(string token, string name, bool isPrivate)
         {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage = httpClient
-                .PostAsync($"{SlackEndpointNames.addChannel}?token={token}&name={name}", null)
-                .GetAwaiter().GetResult();
-            var resultStr = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            var model = CheckErrorAndReturnModel(resultStr);
-            return model.ok;
+            name = Uri.EscapeDataString(name);
+            CreateChannelResponseModel channel = PostRequest<CreateChannelResponseModel>(token, $"{SlackEndpointNames.createChannel}?name={name}&is_private={isPrivate}");
+            return channel.Channel;
         }
 
         /// <summary>
-        /// Get channels list
+        /// Open channel with user(s)
+        /// https://api.slack.com/methods/conversations.open
         /// </summary>
-        /// <param name="token"></param>
-        /// <returns>Array of channels model</returns>
-        public static Channel[] GetChannelsList(string token)
+        /// <param name="token">Access token</param>
+        /// <param name="userIds">Users ids</param>
+        /// 
+        public static SlackChannel OpenChannelWithUsers(string token, params string[] userIds)
         {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            /*var response = httpClient.GetStringAsync($"{SlackEndpointNames.conversationsList}?token={token}")
-                .GetAwaiter()
-                .GetResult();*/
-            var rowResponse = httpClient.GetAsync($"{SlackEndpointNames.conversationsList}?token={token}").Result;
-            var response = rowResponse.Content.ReadAsStringAsync().Result;
-
-            CheckErrorAndReturnModel(response);
-
-            var channels =
-                JsonConvert.DeserializeObject<ChannelsListWithOkModel>(response);
-            var list = channels.channels.Select(x => new Channel { Id = x.id, Name = x.name }).ToList();
-
-            return list.ToArray();
-        }
-
-        public static User[] ListUsersInChannelByChannelId(string token, string channelId)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage = httpClient
-                .GetStringAsync($"{SlackEndpointNames.conversationsMembers}?token={token}&channel={channelId}")
-                .GetAwaiter().GetResult();
-
-            CheckErrorAndReturnModel(responseMessage);
-
-            var ids = JsonConvert.DeserializeObject<MembersRootModel>(responseMessage);
-
-            var names = new List<User>();
-
-            foreach (var item in ids.members)
-            {
-                var userInfoModel = JsonConvert.DeserializeObject<RootUserInfoModel>(httpClient
-                    .GetStringAsync($"{SlackEndpointNames.usersInfo}?token={token}&user={item}").GetAwaiter()
-                    .GetResult());
-                names.Add(new User
-                {
-                    real_name = userInfoModel.user.real_name,
-                    id = userInfoModel.user.id,
-                    name = userInfoModel.user.name
-                });
-            }
-
-            return names.ToArray();
-        }
-
-        public static User[] ListUsersInChannelByChannelName(string token, string channelName)
-        {
-            string channelId = GetChannelIdByName(token, channelName);
-            return ListUsersInChannelByChannelId(token, channelId);
+            string users = userIds.Aggregate((acc, it) => { return acc.Length == 0 ? it : acc + "," + it; });
+            users = Uri.EscapeDataString(users);
+            CreateChannelResponseModel request = PostRequest<CreateChannelResponseModel>(token, $"{SlackEndpointNames.conversationsOpen}?users={users}");
+            return request.Channel;
         }
 
         /// <summary>
-        /// Show recent messages from channel
+        /// Invite user(s) to channel
+        /// https://api.slack.com/methods/conversations.invite
         /// </summary>
-        /// <param name="token"></param>
-        /// <param name="channelName">name of channel</param>
-        /// <returns></returns>
-        public static Message[] GetRecentMessagesFromChannelByChannelName(string token, string channelName)
+        /// <param name="token">Access token</param>
+        /// <param name="channelId">Id of channel</param>
+        /// <param name="userIds">Users ids</param>
+        /// 
+        public static SlackChannel InviteToChannel(string token, string channelId, params string[] userIds)
         {
-            string channelId = GetChannelIdByName(token, channelName);
-            return GetRecentMessagesFromChannelByChannelId(token, channelId);
-        }
-
-        public static Message[] GetRecentMessagesFromChannelByChannelId(string token, string channelId)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage = httpClient
-                .GetStringAsync($"{SlackEndpointNames.conversationsHistory}?token={token}&channel={channelId}")
-                .GetAwaiter().GetResult();
-
-            CheckErrorAndReturnModel(responseMessage);
-            var historyRoot = JsonConvert.DeserializeObject<HistoryRootModel>(responseMessage);
-
-            return historyRoot.messages.Select(x => new Message
-            {
-                text = x.text,
-                ts = x.ts,
-                type = x.type,
-                user = x.user
-            }).ToArray();
-        }
-
-
-        /// <summary>
-        /// Send message to users
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="users">Users ids</param>
-        public static bool OpenChannelWithUser(string token, string users)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage = httpClient
-                .PostAsync($"{SlackEndpointNames.conversationsOpen}?token={token}&users={users}", null)
-                .GetAwaiter().GetResult();
-            var model = CheckErrorAndReturnModel(responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult());
-            return model.ok;
-        }
-
-
-        /// <summary>
-        /// Pin message to channel 
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="channelName">name of channel</param>
-        /// <param name="timestamp">timestamp of message</param>
-        public static bool PinMessageToChannelByChannelName(string token, string channelName, string timestamp)
-        {
-            string channelId = GetChannelIdByName(token, channelName);
-            return PinMessageToChannelByChannelId(token, channelId, timestamp);
-        }
-
-        public static bool PinMessageToChannelByChannelId(string token, string channelId, string timestamp)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage = httpClient
-                .PostAsync(
-                    $"{SlackEndpointNames.pinMsgToChannel}?token={token}&channel={channelId}&timestamp={timestamp}",
-                    null)
-                .GetAwaiter().GetResult();
-            var response = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            var model = CheckErrorAndReturnModel(response);
-            return model.ok;
-        }
-
-        /// <summary>
-        /// Pin message to channel 
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="channelName">name of channel</param>
-        /// <param name="timestamp">timestamp of message</param>
-        public static bool UnpinMessageToChannelByChannelName(string token, string channelName, string timestamp)
-        {
-            string channelId = GetChannelIdByName(token, channelName);
-            return UnpinMessageToChannelByChannelId(token, channelId, timestamp);
-        }
-
-        public static bool UnpinMessageToChannelByChannelId(string token, string channelId, string timestamp)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage = httpClient
-                .PostAsync(
-                    $"{SlackEndpointNames.removePinMsgToChannel}?token={token}&channel={channelId}&timestamp={timestamp}",
-                    null)
-                .GetAwaiter().GetResult();
-            var response = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            var model = CheckErrorAndReturnModel(response);
-            return model.ok;
-        }
-
-
-
-        /// <summary>
-        /// Delete message from channel
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="channelName">name of channel</param>
-        /// <param name="timestamp">timestamp of message</param>
-        public static bool DeleteMessageFromChannelByChannelName(string token, string channelName, string timestamp)
-        {
-            string channelId = GetChannelIdByName(token, channelName);
-            return DeleteMessageFromChannelByChannelId(token, channelId, timestamp);
-        }
-
-        public static bool DeleteMessageFromChannelByChannelId(string token, string channelId, string timestamp)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage = httpClient
-                .PostAsync(
-                    $"{SlackEndpointNames.deleteMsgFromChannel}?token={token}&channel={channelId}&ts={timestamp}",
-                    null)
-                .GetAwaiter().GetResult();
-
-            var response = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            var model = CheckErrorAndReturnModel(response);
-            return model.ok;
-        }
-
-
-
-        /// <summary>
-        /// send message to chanel
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="channelName">name of channel</param>
-        /// <param name="text">message text</param>
-        public static bool PostMessageToChannelByChannelName(string token, string channelName, string text)
-        {
-            string channelId = GetChannelIdByName(token, channelName);
-            return PostMessageToChannelByChannelId(token, channelId, text);
-        }
-
-        public static bool PostMessageToChannelByChannelId(string token, string channelId, string text)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage =
-                httpClient.PostAsync($"{SlackEndpointNames.postMessage}?token={token}&channel={channelId}&text={text}",
-                    null).GetAwaiter().GetResult();
-            var response = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            var model = CheckErrorAndReturnModel(response);
-            return model.ok;
-        }
-
-        /// <summary>
-        /// search message in channels
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="textToSearch"></param>
-        /// <returns></returns>
-        public static Matches[] SearchForTextInChannels(string token, string textToSearch, int count = 20, int page = 1)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage = httpClient
-                .GetStringAsync($"{SlackEndpointNames.searchInChannels}?token={token}&query={textToSearch}&count={count}&page={page}")
-                .GetAwaiter()
-                .GetResult();
-            CheckErrorAndReturnModel(responseMessage);
-
-            var model = JsonConvert.DeserializeObject<MessagesRootModel>(responseMessage);
-            var result = Mapper.Map(model);
-            return result.messages.matches;
+            string users = userIds.Aggregate((acc, it) => { return acc.Length == 0 ? it : acc + "," + it; });
+            users = Uri.EscapeDataString(users);
+            channelId = Uri.EscapeDataString(channelId);
+            CreateChannelResponseModel request = PostRequest<CreateChannelResponseModel>(token, $"{SlackEndpointNames.inviteToChannel}?channel={channelId}&users={users}");
+            return request.Channel;
         }
 
         /// <summary>
         /// send channel to archive
+        /// https://api.slack.com/methods/conversations.archive
         /// </summary>
-        /// <param name="token"></param>
+        /// <param name="token">Access token</param>
+        /// <param name="channelId">Id of channel</param>
+
+        public static void ArchiveChannelByChannelId(string token, string channelId)
+        {
+            channelId = Uri.EscapeDataString(channelId);
+            SlackResponseModel response = PostRequest<SlackResponseModel>(token, $"{SlackEndpointNames.archiveChannel}?channel={channelId}");
+        }
+
+        /// <summary>
+        /// Get user list from a channel
+        /// https://api.slack.com/methods/conversations.members
+        /// https://api.slack.com/methods/users.info
+        /// </summary>
+        /// <param name="token">token</param>
+        /// <param name="channelId">Id of channel</param>
+        /// <returns></returns>
+        public static SlackUser[] ListUsersInChannelByChannelId(string token, string channelId)
+        {
+            List<string> members = new List<string>();
+
+            channelId = Uri.EscapeDataString(channelId);
+            ChannelMembersResponseModel response = GetRequest<ChannelMembersResponseModel>(token, $"{SlackEndpointNames.conversationsMembers}?channel={channelId}&limit={PaginationLimit}");
+            members.AddRange(response.Members);
+
+            while (response.Metadata != null && !String.IsNullOrEmpty(response.Metadata.NextCursor))
+            {
+                response = GetRequest<ChannelMembersResponseModel>(token, $"{SlackEndpointNames.conversationsMembers}?channel={channelId}&limit={PaginationLimit}&cursor={response.Metadata.NextCursor}");
+                members.AddRange(response.Members);
+            }
+
+            var users = new List<SlackUser>();
+            foreach (var id in members)
+            {
+                UserResponseModel usr = GetRequest<UserResponseModel>(token, $"{SlackEndpointNames.usersInfo}?token={token}&user={id}");
+                users.Add(usr.User);
+            }
+
+            return users.ToArray();
+        }
+
+        /// <summary>
+        /// Show recent messages from channel
+        /// https://api.slack.com/methods/conversations.history
+        /// </summary>
+        /// <param name="token">Access token</param>
         /// <param name="channelName">name of channel</param>
-        public static bool ArchiveChannelByChannelName(string token, string channelName)
+        /// <param name="messagesToGetCount">the amount of messages to return</param>
+        /// <param name="latestTimeStamp">the message timestamp you have already received</param>
+        /// <returns></returns>
+
+        public static SlackMessage[] GetMessagesFromChannelByChannelId(string token, string channelId, int messagesToGetCount = 100, string latestTimeStamp = null)
         {
-            string channelId = GetChannelIdByName(token, channelName);
-            return ArchiveChannelByChannelId(token, channelId);
+            int limit = Math.Min(PaginationLimit, messagesToGetCount);
+            var messages = new List<SlackMessage>();
+
+            channelId = Uri.EscapeDataString(channelId);
+            string request = $"{SlackEndpointNames.conversationsHistory}?channel={channelId}&limit={limit}";
+            if (latestTimeStamp != null)
+                request += $"&latest={latestTimeStamp}";
+
+            MessageListResponseModel response = GetRequest<MessageListResponseModel>(token, request);
+            messages.AddRange(response.Messages);
+
+            while ((messagesToGetCount > messages.Count) && (response.Metadata != null) && !String.IsNullOrEmpty(response.Metadata.NextCursor))
+            {
+                limit = Math.Min(PaginationLimit, messagesToGetCount - messages.Count);
+                response = GetRequest<MessageListResponseModel>(token, $"{SlackEndpointNames.conversationsHistory}?channel={channelId}&limit={limit}&cursor={response.Metadata.NextCursor}");
+                messages.AddRange(response.Messages);
+            }
+
+            foreach (var msg in messages)
+            {
+                msg.Text = UnescapeSlackText(msg.Text);
+            }
+            return messages.ToArray();
         }
 
-        public static bool ArchiveChannelByChannelId(string token, string channelId)
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
+        /// <summary>
+        /// send message to chanel
+        /// https://api.slack.com/methods/chat.postMessage
+        /// </summary>
+        /// <param name="token">Access token</param>
+        /// <param name="channelName">name of channel</param>
+        /// <param name="text">message text</param>
 
-            var responseMessage = httpClient
-                .PostAsync($"{SlackEndpointNames.archiveChannel}?token={token}&channel={channelId}", null)
-                .GetAwaiter()
-                .GetResult();
-            var response = responseMessage.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            var model = CheckErrorAndReturnModel(response);
-            return model.ok;
+        public static SlackMessage PostMessageToChannelByChannelId(string token, string channelId, string text)
+        {
+            channelId = Uri.EscapeDataString(channelId);
+            string escapedText = Uri.EscapeDataString(text);
+
+            PostMessageResponseModel response = PostRequest<PostMessageResponseModel>(token, $"{SlackEndpointNames.postMessage}?channel={channelId}&text={escapedText}");
+            if (response.Message != null)
+                response.Message.Text = UnescapeSlackText(response.Message.Text);
+            return response.Message;
         }
+
+
+        /// <summary>
+        /// Pin message to channel 
+        /// https://api.slack.com/methods/pins.add
+        /// </summary>
+        /// <param name="token">Access token</param>
+        /// <param name="channelName">name of channel</param>
+        /// <param name="timestamp">timestamp of message</param>
+        public static void PinMessageToChannelByChannelId(string token, string channelId, string timestamp)
+        {
+            channelId = Uri.EscapeDataString(channelId);
+            timestamp = Uri.EscapeDataString(timestamp);
+            PostRequest<SlackResponseModel>(token, $"{SlackEndpointNames.pinMsgToChannel}?channel={Uri.EscapeDataString(channelId)}&timestamp={timestamp}");
+        }
+
+        /// <summary>
+        /// Pin message to channel 
+        /// </summary>
+        /// <param name="token">Access token</param>
+        /// <param name="channelName">name of channel</param>
+        /// <param name="timestamp">timestamp of message</param>
+        public static void UnpinMessageToChannelByChannelId(string token, string channelId, string timestamp)
+        {
+            channelId = Uri.EscapeDataString(channelId);
+            timestamp = Uri.EscapeDataString(timestamp);
+            PostRequest<SlackResponseModel>(token, $"{SlackEndpointNames.removePinMsgToChannel}?channel={channelId}&timestamp={timestamp}");
+        }
+
+        /// <summary>
+        /// Delete message from channel
+        /// https://api.slack.com/methods/chat.delete
+        /// </summary>
+        /// <param name="token">Access token</param>
+        /// <param name="channelName">name of channel</param>
+        /// <param name="timestamp">timestamp of message</param>
+        public static void DeleteMessageFromChannelByChannelId(string token, string channelId, string timestamp)
+        {
+            channelId = Uri.EscapeDataString(channelId);
+            timestamp = Uri.EscapeDataString(timestamp);
+            PostRequest<SlackResponseModel>(token, $"{SlackEndpointNames.deleteMsgFromChannel}?channel={channelId}&ts={timestamp}");
+        }
+
+        /// <summary>
+        /// search message in channels
+        /// https://api.slack.com/methods/search.messages
+        /// </summary>
+        /// <param name="token">Access token</param>
+        /// <param name="textToSearch"></param>
+        /// <param name="count"> Maximum amount of results</param>
+        /// <returns></returns>
+        public static SlackMatches[] SearchForTextInChannels(string token, string textToSearch, int matchesToGetCount = 1000)
+        {
+            int SearchPaginationLimit = Math.Min(100, PaginationLimit); // count cannot be more than 100 for this request
+            int count = Math.Min(SearchPaginationLimit, matchesToGetCount);
+            var res = new List<SlackMatches>();
+
+            textToSearch = Uri.EscapeDataString(textToSearch);
+            MatchesResponseModel response = GetRequest<MatchesResponseModel>(token, $"{SlackEndpointNames.searchInChannels}?query={textToSearch}&count={count}");
+            if (response.Messages != null && response.Messages.Matches != null)
+            {
+                res.AddRange(response.Messages.Matches);
+
+                int currentPage = 2;
+                while ((res.Count < matchesToGetCount) && (response.Messages.Pagination.PageCount >= currentPage) &&
+                    (currentPage <= 100)) // page cannot be more than 100 for this request
+                {
+                    count = Math.Min(SearchPaginationLimit, matchesToGetCount - res.Count);
+                    response = GetRequest<MatchesResponseModel>(token, $"{SlackEndpointNames.searchInChannels}?query={textToSearch}&count={count}&page={currentPage}");
+
+                    if (response.Messages != null && response.Messages.Matches != null)
+                        res.AddRange(response.Messages.Matches);
+                    else
+                        break;
+
+                    currentPage++;
+                }
+            }
+
+            foreach (var it in res)
+                it.Text = UnescapeSlackText(it.Text);
+            return res.ToArray();
+        }
+
 
 
         private static Dictionary<string, string> GetChannelsDictionary(string token)
         {
-            var httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
-
-            var responseMessage = httpClient.GetStringAsync($"{SlackEndpointNames.conversationsList}?token={token}")
-                .GetAwaiter()
-                .GetResult();
-            CheckErrorAndReturnModel(responseMessage);
-
-            var channels = JsonConvert.DeserializeObject<ChannelsListWithOkModel>(responseMessage);
+            var channels = GetChannelsList(token, true);
 
             var channelsNamesDictionary = new Dictionary<string, string>();
 
-            foreach (var item in channels.channels) channelsNamesDictionary.Add(item.id, item.name);
+            foreach (var item in channels) channelsNamesDictionary.Add(item.Name, item.Id);
 
             return channelsNamesDictionary;
         }
 
-        private static ErrorModel CheckErrorAndReturnModel(string response)
+        // For Slack text message we need to escape just a few characters. So we do it here without any library
+        private static string EscapeSlackText(string text)
         {
-            ErrorModel model = new ErrorModel();
-            try
+            StringBuilder res = new StringBuilder(text.Length);
+            foreach (Char ch in text)
             {
-                model = JsonConvert.DeserializeObject<ErrorModel>(response);
-                if (!model.ok) throw new ArgumentException($"Server return {model.error}");
-            }
-            catch (JsonException)
-            {
-                // all are okey, go next step
-            }
+                switch (ch)
+                {
+                    case '>':
+                        res.Append("&gt;");
+                        break;
+                    case '<':
+                        res.Append("&lt;");
+                        break;
+                    case '&':
+                        res.Append("&amp;");
+                        break;
 
-            return model;
+                    default:
+                        res.Append(ch);
+                        break;
+                }
+            }
+            return res.ToString();
+        }
+
+        private static string UnescapeSlackText(string text)
+        {
+            string res = text;
+            if (!string.IsNullOrEmpty(res))
+            {
+                res = res.Replace("&gt;", ">");
+                res = res.Replace("&lt;", "<");
+                res = res.Replace("&amp;", "&");
+            }
+            return res;
         }
     }
 }
