@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using Newtonsoft.Json;
-using Decisions.Slack.Data;
 using Decisions.Slack.Utility;
 using Microsoft.Win32.SafeHandles;
 using System.Text;
@@ -67,7 +66,7 @@ namespace Decisions.Slack.Utility
         /// <param name="token">Access token</param>
         /// <param name="excludeArchived">Do not return archieved channels</param>
         /// <returns>Array of channels model</returns>
-        public static SlackChannel[] GetChannelsList(string token, bool excludeArchived)
+        public static SlackChannel[] GetChannelList(string token, bool excludeArchived)
         {
             List<SlackChannel> channels = new List<SlackChannel>();
 
@@ -136,10 +135,10 @@ namespace Decisions.Slack.Utility
         /// <param name="token">Access token</param>
         /// <param name="channelId">Id of channel</param>
 
-        public static void ArchiveChannelByChannelId(string token, string channelId)
+        public static void ArchiveChannel(string token, string channelId)
         {
             channelId = Uri.EscapeDataString(channelId);
-            SlackResponseModel response = PostRequest<SlackResponseModel>(token, $"{SlackEndpointNames.archiveChannel}?channel={channelId}");
+            PostRequest<SlackResponseModel>(token, $"{SlackEndpointNames.archiveChannel}?channel={channelId}");
         }
 
         /// <summary>
@@ -150,7 +149,7 @@ namespace Decisions.Slack.Utility
         /// <param name="token">token</param>
         /// <param name="channelId">Id of channel</param>
         /// <returns></returns>
-        public static SlackUser[] ListUsersInChannelByChannelId(string token, string channelId)
+        public static SlackUser[] GetUserListInChannel(string token, string channelId)
         {
             List<string> members = new List<string>();
 
@@ -183,8 +182,7 @@ namespace Decisions.Slack.Utility
         /// <param name="messagesToGetCount">the amount of messages to return</param>
         /// <param name="latestTimeStamp">the message timestamp you have already received</param>
         /// <returns></returns>
-
-        public static SlackMessage[] GetMessagesFromChannelByChannelId(string token, string channelId, int messagesToGetCount = 100, string latestTimeStamp = null)
+        public static SlackMessage[] GetMessagesFromChannel(string token, string channelId, int messagesToGetCount = 100, string latestTimeStamp = null)
         {
             int limit = Math.Min(PaginationLimit, messagesToGetCount);
             var messages = new List<SlackMessage>();
@@ -218,8 +216,7 @@ namespace Decisions.Slack.Utility
         /// <param name="token">Access token</param>
         /// <param name="channelName">name of channel</param>
         /// <param name="text">message text</param>
-
-        public static SlackMessage PostMessageToChannelByChannelId(string token, string channelId, string text)
+        public static SlackMessage PostMessageToChannel(string token, string channelId, string text)
         {
             channelId = Uri.EscapeDataString(channelId);
             string escapedText = Uri.EscapeDataString(text);
@@ -232,13 +229,13 @@ namespace Decisions.Slack.Utility
 
 
         /// <summary>
-        /// Pin message to channel 
+        /// Pin message in channel 
         /// https://api.slack.com/methods/pins.add
         /// </summary>
         /// <param name="token">Access token</param>
         /// <param name="channelName">name of channel</param>
         /// <param name="timestamp">timestamp of message</param>
-        public static void PinMessageToChannelByChannelId(string token, string channelId, string timestamp)
+        public static void PinMessage(string token, string channelId, string timestamp)
         {
             channelId = Uri.EscapeDataString(channelId);
             timestamp = Uri.EscapeDataString(timestamp);
@@ -246,12 +243,12 @@ namespace Decisions.Slack.Utility
         }
 
         /// <summary>
-        /// Pin message to channel 
+        /// Unpin message in channel 
         /// </summary>
         /// <param name="token">Access token</param>
         /// <param name="channelName">name of channel</param>
         /// <param name="timestamp">timestamp of message</param>
-        public static void UnpinMessageToChannelByChannelId(string token, string channelId, string timestamp)
+        public static void UnpinMessage(string token, string channelId, string timestamp)
         {
             channelId = Uri.EscapeDataString(channelId);
             timestamp = Uri.EscapeDataString(timestamp);
@@ -265,7 +262,7 @@ namespace Decisions.Slack.Utility
         /// <param name="token">Access token</param>
         /// <param name="channelName">name of channel</param>
         /// <param name="timestamp">timestamp of message</param>
-        public static void DeleteMessageFromChannelByChannelId(string token, string channelId, string timestamp)
+        public static void DeleteMessageFromChannel(string token, string channelId, string timestamp)
         {
             channelId = Uri.EscapeDataString(channelId);
             timestamp = Uri.EscapeDataString(timestamp);
@@ -280,10 +277,10 @@ namespace Decisions.Slack.Utility
         /// <param name="textToSearch"></param>
         /// <param name="count"> Maximum amount of results</param>
         /// <returns></returns>
-        public static SlackMatches[] SearchForTextInChannels(string token, string textToSearch, int matchesToGetCount = 1000)
+        public static SlackMatches[] SearchForTextInChannels(string token, string textToSearch, int matchToGetCount = 1000)
         {
             int SearchPaginationLimit = Math.Min(100, PaginationLimit); // count cannot be more than 100 for this request
-            int count = Math.Min(SearchPaginationLimit, matchesToGetCount);
+            int count = Math.Min(SearchPaginationLimit, matchToGetCount);
             var res = new List<SlackMatches>();
 
             textToSearch = Uri.EscapeDataString(textToSearch);
@@ -293,10 +290,10 @@ namespace Decisions.Slack.Utility
                 res.AddRange(response.Messages.Matches);
 
                 int currentPage = 2;
-                while ((res.Count < matchesToGetCount) && (response.Messages.Pagination.PageCount >= currentPage) &&
+                while ((res.Count < matchToGetCount) && (response.Messages.Pagination.PageCount >= currentPage) &&
                     (currentPage <= 100)) // page cannot be more than 100 for this request
                 {
-                    count = Math.Min(SearchPaginationLimit, matchesToGetCount - res.Count);
+                    count = Math.Min(SearchPaginationLimit, matchToGetCount - res.Count);
                     response = GetRequest<MatchesResponseModel>(token, $"{SlackEndpointNames.searchInChannels}?query={textToSearch}&count={count}&page={currentPage}");
 
                     if (response.Messages != null && response.Messages.Matches != null)
@@ -317,7 +314,7 @@ namespace Decisions.Slack.Utility
 
         private static Dictionary<string, string> GetChannelsDictionary(string token)
         {
-            var channels = GetChannelsList(token, true);
+            var channels = GetChannelList(token, true);
 
             var channelsNamesDictionary = new Dictionary<string, string>();
 
@@ -326,42 +323,6 @@ namespace Decisions.Slack.Utility
             return channelsNamesDictionary;
         }
 
-        // For Slack text message we need to escape just a few characters. So we do it here without any library
-        private static string EscapeSlackText(string text)
-        {
-            StringBuilder res = new StringBuilder(text.Length);
-            foreach (Char ch in text)
-            {
-                switch (ch)
-                {
-                    case '>':
-                        res.Append("&gt;");
-                        break;
-                    case '<':
-                        res.Append("&lt;");
-                        break;
-                    case '&':
-                        res.Append("&amp;");
-                        break;
 
-                    default:
-                        res.Append(ch);
-                        break;
-                }
-            }
-            return res.ToString();
-        }
-
-        private static string UnescapeSlackText(string text)
-        {
-            string res = text;
-            if (!string.IsNullOrEmpty(res))
-            {
-                res = res.Replace("&gt;", ">");
-                res = res.Replace("&lt;", "<");
-                res = res.Replace("&amp;", "&");
-            }
-            return res;
-        }
     }
 }

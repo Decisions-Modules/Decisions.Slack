@@ -2,7 +2,7 @@
 using System;
 using System.Net;
 
-namespace Decisions.Slack.Data
+namespace Decisions.Slack
 {
     internal class SlackMetadataModel
     {

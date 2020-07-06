@@ -2,9 +2,7 @@
 using DecisionsFramework.Data.ORMapper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Decisions.Slack.Utility;
-using Decisions.Slack.Data;
 using System.Linq;
-using Decisions.Utilities.OpenXmlPowerTools;
 
 namespace Decisions.Slack.TestSuit
 {
@@ -22,19 +20,19 @@ namespace Decisions.Slack.TestSuit
         [TestMethod]
         public void TestGetChannelsList()
         {
-            var channels = SlackClientApi.GetChannelsList(AccessToken, false);
+            var channels = SlackClientApi.GetChannelList(AccessToken, false);
             Assert.IsTrue(channels.Length > 0);
         }
 
         [TestMethod]
         public void TestListUsersInChannelByChannelId()
         {
-            SlackChannel[] channels = SlackClientApi.GetChannelsList(AccessToken, true);
+            SlackChannel[] channels = SlackClientApi.GetChannelList(AccessToken, true);
 
             int userCount = 0;
             foreach (var ch in channels)
             {
-                var users = SlackClientApi.ListUsersInChannelByChannelId(AccessToken, ch.Id);
+                var users = SlackClientApi.GetUserListInChannel(AccessToken, ch.Id);
                 userCount += users.Length;
             }
 
@@ -54,7 +52,7 @@ namespace Decisions.Slack.TestSuit
             finally
             {
                 if (channel != null)
-                    SlackClientApi.ArchiveChannelByChannelId(AccessToken, channel.Id);
+                    SlackClientApi.ArchiveChannel(AccessToken, channel.Id);
             }
         }
 
@@ -62,7 +60,7 @@ namespace Decisions.Slack.TestSuit
         public void TestOpenChannelWithUser()
         {
             string channelId = SlackClientApi.GetChannelIdByName(AccessToken, TestData.WelcomeChannelName);
-            var users = SlackClientApi.ListUsersInChannelByChannelId(AccessToken, channelId);
+            var users = SlackClientApi.GetUserListInChannel(AccessToken, channelId);
 
             SlackChannel channel = SlackClientApi.OpenChannelWithUsers(AccessToken, users[0].Id);
             Assert.IsNotNull(channel);
@@ -71,7 +69,7 @@ namespace Decisions.Slack.TestSuit
         [TestMethod]
         public void TestInviteToChannel()
         {
-            var users = SlackClientApi.ListUsersInChannelByChannelId(AccessToken, SlackClientApi.GetChannelIdByName(AccessToken, TestData.WelcomeChannelName));
+            var users = SlackClientApi.GetUserListInChannel(AccessToken, SlackClientApi.GetChannelIdByName(AccessToken, TestData.WelcomeChannelName));
 
             string invitedUserId = users[0].Id;
             string testChannelName = TestData.GetTestChannelName();
@@ -82,14 +80,14 @@ namespace Decisions.Slack.TestSuit
 
                 SlackClientApi.InviteToChannel(AccessToken, channel.Id, invitedUserId);
 
-                var invitedUsers = SlackClientApi.ListUsersInChannelByChannelId(AccessToken, channel.Id);
+                var invitedUsers = SlackClientApi.GetUserListInChannel(AccessToken, channel.Id);
                 var u = invitedUsers.FirstOrDefault((it) => { return it.Id == invitedUserId; });
                 Assert.IsNotNull(u);
             }
             finally
             {
                 if (channel != null)
-                    SlackClientApi.ArchiveChannelByChannelId(AccessToken, channel.Id);
+                    SlackClientApi.ArchiveChannel(AccessToken, channel.Id);
             }
         }
 
@@ -101,13 +99,13 @@ namespace Decisions.Slack.TestSuit
             try
             {
                 string channelId = SlackClientApi.GetChannelIdByName(AccessToken, testChannelName);
-                SlackClientApi.ArchiveChannelByChannelId(AccessToken, channelId);
+                SlackClientApi.ArchiveChannel(AccessToken, channelId);
                 channel = null;
             }
             finally
             {
                 if (channel != null)
-                    SlackClientApi.ArchiveChannelByChannelId(AccessToken, channel.Id);
+                    SlackClientApi.ArchiveChannel(AccessToken, channel.Id);
             }
         }
 
@@ -119,23 +117,23 @@ namespace Decisions.Slack.TestSuit
             {
                 string lastTimestamp = null;
 
-                SlackMessage[] messages = SlackClientApi.GetMessagesFromChannelByChannelId(AccessToken, channelId, 10000);
+                SlackMessage[] messages = SlackClientApi.GetMessagesFromChannel(AccessToken, channelId, 10000);
                 Assert.IsTrue(messages.Length > 0);
 
                 if (messages.Length < 5)
                     for (int i = 0; i < 5; i++)
-                        SlackClientApi.PostMessageToChannelByChannelId(AccessToken, channelId, TestData.GetTestMessage());
+                        SlackClientApi.PostMessageToChannel(AccessToken, channelId, TestData.GetTestMessage());
 
-                SlackMessage[] messages1 = SlackClientApi.GetMessagesFromChannelByChannelId(AccessToken, channelId, 1);
+                SlackMessage[] messages1 = SlackClientApi.GetMessagesFromChannel(AccessToken, channelId, 1);
                 Assert.IsTrue(messages1.Length == 1);
                 lastTimestamp = messages1.Last().Timestamp;
 
-                SlackMessage[] messages2 = SlackClientApi.GetMessagesFromChannelByChannelId(AccessToken, channelId, 2, lastTimestamp);
+                SlackMessage[] messages2 = SlackClientApi.GetMessagesFromChannel(AccessToken, channelId, 2, lastTimestamp);
                 Assert.IsTrue(messages2.Length == 2);
                 Assert.AreNotEqual(lastTimestamp, messages2[0].Timestamp);
                 lastTimestamp = messages2.Last().Timestamp;
 
-                SlackMessage[] messages3 = SlackClientApi.GetMessagesFromChannelByChannelId(AccessToken, channelId, 3, lastTimestamp);
+                SlackMessage[] messages3 = SlackClientApi.GetMessagesFromChannel(AccessToken, channelId, 3, lastTimestamp);
                 Assert.IsTrue(messages3.Length == 3);
                 Assert.AreNotEqual(lastTimestamp, messages3[0].Timestamp);
             }
@@ -151,14 +149,14 @@ namespace Decisions.Slack.TestSuit
             try
             {
                 var text = TestData.GetTestMessage();
-                var message = SlackClientApi.PostMessageToChannelByChannelId(AccessToken, channelId, text);
+                var message = SlackClientApi.PostMessageToChannel(AccessToken, channelId, text);
                 Assert.AreEqual(text, message.Text);
 
                 var specialText = ">Special characters: \" ' & < > \n        should look good";
-                var message2 = SlackClientApi.PostMessageToChannelByChannelId(AccessToken, channelId, specialText);
+                var message2 = SlackClientApi.PostMessageToChannel(AccessToken, channelId, specialText);
                 Assert.AreEqual(specialText, message2.Text);
 
-                SlackMessage lastMessage = SlackClientApi.GetMessagesFromChannelByChannelId(AccessToken, channelId, 1)[0];
+                SlackMessage lastMessage = SlackClientApi.GetMessagesFromChannel(AccessToken, channelId, 1)[0];
                 Assert.AreEqual(specialText, lastMessage.Text);
             }
             finally
@@ -171,8 +169,8 @@ namespace Decisions.Slack.TestSuit
         {
             string channelId = SlackClientApi.GetChannelIdByName(AccessToken, TestData.WelcomeChannelName);
 
-            var newMessage = SlackClientApi.PostMessageToChannelByChannelId(AccessToken, channelId, TestData.GetTestMessage());
-            SlackClientApi.DeleteMessageFromChannelByChannelId(AccessToken, channelId, newMessage.Timestamp);
+            var newMessage = SlackClientApi.PostMessageToChannel(AccessToken, channelId, TestData.GetTestMessage());
+            SlackClientApi.DeleteMessageFromChannel(AccessToken, channelId, newMessage.Timestamp);
 
         }
 
@@ -181,18 +179,18 @@ namespace Decisions.Slack.TestSuit
         public void TestPinMessage()
         {
             string channelId = SlackClientApi.GetChannelIdByName(AccessToken, TestData.WelcomeChannelName);
-            var pinnedMessage = SlackClientApi.PostMessageToChannelByChannelId(AccessToken, channelId, TestData.GetTestMessage());
+            var pinnedMessage = SlackClientApi.PostMessageToChannel(AccessToken, channelId, TestData.GetTestMessage());
 
             try
             {
-                SlackClientApi.PinMessageToChannelByChannelId(AccessToken, channelId, pinnedMessage.Timestamp);
-                var lastMessage = SlackClientApi.GetMessagesFromChannelByChannelId(AccessToken, channelId, 1)[0];
+                SlackClientApi.PinMessage(AccessToken, channelId, pinnedMessage.Timestamp);
+                var lastMessage = SlackClientApi.GetMessagesFromChannel(AccessToken, channelId, 1)[0];
                 Assert.IsNotNull(lastMessage.PinnedTo);
                 Assert.AreEqual(channelId, lastMessage.PinnedTo[0]);
             }
             finally
             {
-                SlackClientApi.DeleteMessageFromChannelByChannelId(AccessToken, channelId, pinnedMessage.Timestamp);
+                SlackClientApi.DeleteMessageFromChannel(AccessToken, channelId, pinnedMessage.Timestamp);
             }
         }
 
@@ -200,18 +198,18 @@ namespace Decisions.Slack.TestSuit
         public void TestUnpinMessage()
         {
             string channelId = SlackClientApi.GetChannelIdByName(AccessToken, TestData.WelcomeChannelName);
-            var pinnedMessage = SlackClientApi.PostMessageToChannelByChannelId(AccessToken, channelId, TestData.GetTestMessage());
+            var pinnedMessage = SlackClientApi.PostMessageToChannel(AccessToken, channelId, TestData.GetTestMessage());
             try
             {
-                SlackClientApi.PinMessageToChannelByChannelId(AccessToken, channelId, pinnedMessage.Timestamp);
-                SlackClientApi.UnpinMessageToChannelByChannelId(AccessToken, channelId, pinnedMessage.Timestamp);
+                SlackClientApi.PinMessage(AccessToken, channelId, pinnedMessage.Timestamp);
+                SlackClientApi.UnpinMessage(AccessToken, channelId, pinnedMessage.Timestamp);
 
-                var lastMessage = SlackClientApi.GetMessagesFromChannelByChannelId(AccessToken, channelId, 1)[0];
+                var lastMessage = SlackClientApi.GetMessagesFromChannel(AccessToken, channelId, 1)[0];
                 Assert.IsNull(lastMessage.PinnedTo);
             }
             finally
             {
-                SlackClientApi.DeleteMessageFromChannelByChannelId(AccessToken, channelId, pinnedMessage.Timestamp);
+                SlackClientApi.DeleteMessageFromChannel(AccessToken, channelId, pinnedMessage.Timestamp);
             }
         }
 

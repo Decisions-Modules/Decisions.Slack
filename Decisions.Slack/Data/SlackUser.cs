@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using System.Runtime.Serialization;
 
-namespace Decisions.Slack.Data
+namespace Decisions.Slack
 {
     [DataContract]
     public class SlackUser

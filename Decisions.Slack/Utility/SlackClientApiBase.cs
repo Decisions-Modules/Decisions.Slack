@@ -1,5 +1,4 @@
-﻿using Decisions.Slack.Data;
-using DecisionsFramework;
+﻿using DecisionsFramework;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -35,7 +34,7 @@ namespace Decisions.Slack.Utility
             var responseString = response.Content.ReadAsStringAsync().Result;
             if (!response.IsSuccessStatusCode)
             {
-                throw new SlackException("", response.StatusCode);
+                throw new SlackException(response.ReasonPhrase, response.StatusCode);
             };
 
             var result = JsonConvert.DeserializeObject<R>(responseString);
@@ -58,6 +57,44 @@ namespace Decisions.Slack.Utility
         {
             HttpResponseMessage response = GetClient(accesssToken).PostAsync(requestUri, null).Result;
             return ParseResponse<R>(response);
+        }
+
+        // For Slack text message we need to escape just a few characters. So we do it here without any library
+        private static string EscapeSlackText(string text)
+        {
+            StringBuilder res = new StringBuilder(text.Length);
+            foreach (Char ch in text)
+            {
+                switch (ch)
+                {
+                    case '>':
+                        res.Append("&gt;");
+                        break;
+                    case '<':
+                        res.Append("&lt;");
+                        break;
+                    case '&':
+                        res.Append("&amp;");
+                        break;
+
+                    default:
+                        res.Append(ch);
+                        break;
+                }
+            }
+            return res.ToString();
+        }
+
+        private static string UnescapeSlackText(string text)
+        {
+            string res = text;
+            if (!string.IsNullOrEmpty(res))
+            {
+                res = res.Replace("&gt;", ">");
+                res = res.Replace("&lt;", "<");
+                res = res.Replace("&amp;", "&");
+            }
+            return res;
         }
 
     }

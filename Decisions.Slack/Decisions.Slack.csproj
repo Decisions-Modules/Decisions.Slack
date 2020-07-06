@@ -42,12 +42,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\SlackChannel.cs" />
-    <Compile Include="Data\SlackException.cs" />
+    <Compile Include="Data\SlackErrorInfo.cs" />
     <Compile Include="Data\SlackMatches.cs" />
     <Compile Include="Data\SlackMessage.cs" />
     <Compile Include="Data\SlackUser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Data\SlackResponseModel.cs" />
+    <Compile Include="Steps\AbstractStep.cs" />
+    <Compile Include="Steps\ArchiveChannel.cs" />
+    <Compile Include="Steps\CreateChannel.cs" />
+    <Compile Include="Steps\DeleteMessageFromChannel.cs" />
+    <Compile Include="Steps\GetChannelIdByName.cs" />
+    <Compile Include="Steps\GetChannelList.cs" />
+    <Compile Include="Steps\GetMessagesFromChannel.cs" />
+    <Compile Include="Steps\InviteToChannel.cs" />
+    <Compile Include="Steps\GetUserListInChannel.cs" />
+    <Compile Include="Steps\OpenChannelWithUsers.cs" />
+    <Compile Include="Steps\PinMessageToChannel.cs" />
+    <Compile Include="Steps\PostMessageToChannel.cs" />
+    <Compile Include="Steps\SearchForTextInChannels.cs" />
+    <Compile Include="Steps\UnpinMessageToChannel.cs" />
     <Compile Include="Utility\SlackClientApi.cs" />
     <Compile Include="Utility\SlackClientApiBase.cs" />
   </ItemGroup>
