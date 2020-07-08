@@ -60,31 +60,6 @@ namespace Decisions.Slack.Utility
         }
 
         // For Slack text message we need to escape just a few characters. So we do it here without any library
-        private static string EscapeSlackText(string text)
-        {
-            StringBuilder res = new StringBuilder(text.Length);
-            foreach (Char ch in text)
-            {
-                switch (ch)
-                {
-                    case '>':
-                        res.Append("&gt;");
-                        break;
-                    case '<':
-                        res.Append("&lt;");
-                        break;
-                    case '&':
-                        res.Append("&amp;");
-                        break;
-
-                    default:
-                        res.Append(ch);
-                        break;
-                }
-            }
-            return res.ToString();
-        }
-
         private static string UnescapeSlackText(string text)
         {
             string res = text;

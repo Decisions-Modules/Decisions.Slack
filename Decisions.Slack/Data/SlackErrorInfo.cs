@@ -25,6 +25,12 @@ namespace Decisions.Slack
                 HttpErrorCode = (ex as SlackException)?.HttpErrorCode
             };
         }
+
+        override public String ToString()
+        {
+            if (HttpErrorCode == null) return ErrorMessage;
+            else return ErrorMessage + "\nHttpErrorCode = " + HttpErrorCode;
+        }
     }
 
     internal class SlackException : Exception

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Post Messages to Channel", SlackCategory)]
+    [AutoRegisterStep("Post Message to Channel", slackCategory)]
     [Writable]
     public class PostMessageToChannel : AbstractStep
     {
@@ -20,7 +20,7 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(string), CHANNEL_ID), new DataDescription(typeof(string), MESSAGE_TEXT), };
+                var data = new DataDescription[] { new DataDescription(typeof(string), channelIdLabel), new DataDescription(typeof(string), messageTextLabel), };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -29,15 +29,15 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME, new DataDescription(typeof(SlackMessage), RESULT)) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel, new DataDescription(typeof(SlackMessage), resultLabel)) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            string channelId = (string)data.Data[CHANNEL_ID];
-            string text = (string)data.Data[MESSAGE_TEXT];
+            string channelId = (string)data.Data[AbstractStep.channelIdLabel];
+            string text = (string)data.Data[messageTextLabel];
             return SlackClientApi.PostMessageToChannel(token, channelId, text);
         }
     }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Get Messages from Channel", SlackCategory)]
+    [AutoRegisterStep("Get Messages from Channel", slackCategory)]
     [Writable]
     public class GetMessagesFromChannel : AbstractStep
     {
@@ -20,9 +20,9 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(string), CHANNEL_ID),
-                    new DataDescription(typeof(int), MESSAGE_COUNT),
-                    new DataDescription(typeof(string), LATEST_MESSAGE_TIMESTAMP), };
+                var data = new DataDescription[] { new DataDescription(typeof(string), channelIdLabel),
+                    new DataDescription(typeof(int), messageCountLabel),
+                    new DataDescription(typeof(string), latestMessageTimestampLabel), };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -31,16 +31,16 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME, new DataDescription(typeof(SlackMessage[]), RESULT)) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel, new DataDescription(typeof(SlackMessage[]), resultLabel)) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            string channelId = (string)data.Data[CHANNEL_ID];
-            int maxMessageCount = (int)data.Data[MESSAGE_COUNT];
-            string timestamp = (string)data.Data[LATEST_MESSAGE_TIMESTAMP];
+            string channelId = (string)data.Data[AbstractStep.channelIdLabel];
+            int maxMessageCount = (int)data.Data[messageCountLabel];
+            string timestamp = (string)data.Data[latestMessageTimestampLabel];
             return SlackClientApi.GetMessagesFromChannel(token, channelId, maxMessageCount, timestamp);
         }
     }

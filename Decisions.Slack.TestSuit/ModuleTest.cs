@@ -25,7 +25,7 @@ namespace Decisions.Slack.TestSuit
         }
 
         [TestMethod]
-        public void TestListUsersInChannelByChannelId()
+        public void TestListUsersInChannel()
         {
             SlackChannel[] channels = SlackClientApi.GetChannelList(AccessToken, true);
 
@@ -110,7 +110,7 @@ namespace Decisions.Slack.TestSuit
         }
 
         [TestMethod]
-        public void TestGetRecentMessagesFromChannelByChannelId()
+        public void TestGetMessagesFromChannel()
         {
             string channelId = SlackClientApi.GetChannelIdByName(AccessToken, TestData.WelcomeChannelName);
             try

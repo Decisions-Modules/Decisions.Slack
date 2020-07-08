@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Delete Message from Channel", SlackCategory)]
+    [AutoRegisterStep("Delete Message from Channel", slackCategory)]
     [Writable]
     public class DeleteMessageFromChannel : AbstractStep
     {
@@ -21,7 +21,7 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(string), CHANNEL_ID), new DataDescription(typeof(string), MESSAGE_TIMESTAMP), };
+                var data = new DataDescription[] { new DataDescription(typeof(string), channelIdLabel), new DataDescription(typeof(string), messageTimestampLabel), };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -30,15 +30,15 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            string channelId = (string)data.Data[CHANNEL_ID];
-            string timestamp = (string)data.Data[MESSAGE_TIMESTAMP];
+            string channelId = (string)data.Data[AbstractStep.channelIdLabel];
+            string timestamp = (string)data.Data[messageTimestampLabel];
             SlackClientApi.DeleteMessageFromChannel(token, channelId, timestamp);
             return null;
         }

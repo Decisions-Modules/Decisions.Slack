@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Get User List in Channel", SlackCategory)]
+    [AutoRegisterStep("Get User List in Channel", slackCategory)]
     [Writable]
     public class GetUserListInChannel : AbstractStep
     {
@@ -20,7 +20,7 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(string), CHANNEL_ID), };
+                var data = new DataDescription[] { new DataDescription(typeof(string), channelIdLabel), };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -29,14 +29,14 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME, new DataDescription(typeof(SlackUser[]), RESULT)) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel, new DataDescription(typeof(SlackUser[]), resultLabel)) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            string channelId = (string)data.Data[CHANNEL_ID];
+            string channelId = (string)data.Data[AbstractStep.channelIdLabel];
             return SlackClientApi.GetUserListInChannel(token, channelId);
         }
     }

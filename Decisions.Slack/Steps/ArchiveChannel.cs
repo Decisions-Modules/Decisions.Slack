@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Archive Channel", SlackCategory)]
+    [AutoRegisterStep("Archive Channel", slackCategory)]
     [Writable]
     public class ArchiveChannel : AbstractStep
     {
@@ -20,7 +20,7 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(string), CHANNEL_ID), };
+                var data = new DataDescription[] { new DataDescription(typeof(string), channelIdLabel), };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -29,14 +29,14 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            string channelId = (string)data.Data[CHANNEL_ID];
+            string channelId = (string)data.Data[AbstractStep.channelIdLabel];
             SlackClientApi.ArchiveChannel(token, channelId);
             return null;
         }

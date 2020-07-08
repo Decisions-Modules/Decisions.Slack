@@ -1,4 +1,5 @@
 ﻿using Decisions.Slack.Utility;
+using DecisionsFramework.Design.Properties;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -15,6 +16,7 @@ namespace Decisions.Slack
         public string User { get; set; }
 
         [DataMember]
+        [LongTextPropertyEditorAttribute]
         public string Text { get; set; }
 
         [DataMember]

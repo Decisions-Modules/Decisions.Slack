@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Open Channel with Users", SlackCategory)]
+    [AutoRegisterStep("Open Channel with Users", slackCategory)]
     [Writable]
     public class OpenChannelWithUsers : AbstractStep
     {
@@ -20,7 +20,7 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(string[]), USER_IDS), };
+                var data = new DataDescription[] { new DataDescription(typeof(string[]), userIdsLabel), };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -29,14 +29,14 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME, new DataDescription(typeof(SlackChannel), RESULT)) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel, new DataDescription(typeof(SlackChannel), resultLabel)) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            string[] userIds = (string[])data.Data[USER_IDS];
+            string[] userIds = (string[])data.Data[AbstractStep.userIdsLabel];
             return SlackClientApi.OpenChannelWithUsers(token, userIds);
         }
     }

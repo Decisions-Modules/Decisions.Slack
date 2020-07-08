@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Search for Text in Channels", SlackCategory)]
+    [AutoRegisterStep("Search for Text in Channels", slackCategory)]
     [Writable]
     public class SearchForTextInChannels : AbstractStep
     {
@@ -20,7 +20,7 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(string), TEXT_TO_SERACH), new DataDescription(typeof(int), MATCH_COUNT) };
+                var data = new DataDescription[] { new DataDescription(typeof(string), textToSerachLabel), new DataDescription(typeof(int), matchCountLabel) };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -29,15 +29,15 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME, new DataDescription(typeof(SlackMessage[]), RESULT)) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel, new DataDescription(typeof(SlackMatches[]), resultLabel)) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            string text = (string)data.Data[TEXT_TO_SERACH];
-            int maxMatchCount = (int)data.Data[MATCH_COUNT];
+            string text = (string)data.Data[textToSerachLabel];
+            int maxMatchCount = (int)data.Data[matchCountLabel];
 
             return SlackClientApi.SearchForTextInChannels(token, text, maxMatchCount);
         }

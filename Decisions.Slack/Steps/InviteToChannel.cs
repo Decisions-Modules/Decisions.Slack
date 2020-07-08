@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Invite to Channel", SlackCategory)]
+    [AutoRegisterStep("Invite to Channel", slackCategory)]
     [Writable]
     public class InviteToChannel : AbstractStep
     {
@@ -20,7 +20,7 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(string), CHANNEL_ID), new DataDescription(typeof(string[]), USER_IDS), };
+                var data = new DataDescription[] { new DataDescription(typeof(string), channelIdLabel), new DataDescription(typeof(string[]), userIdsLabel), };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -29,15 +29,15 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME, new DataDescription(typeof(SlackChannel), RESULT)) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel, new DataDescription(typeof(SlackChannel), resultLabel)) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            string channelId = (string)data.Data[CHANNEL_ID];
-            string[] userIds = (string[])data.Data[USER_IDS];
+            string channelId = (string)data.Data[AbstractStep.channelIdLabel];
+            string[] userIds = (string[])data.Data[AbstractStep.userIdsLabel];
             return SlackClientApi.InviteToChannel(token, channelId, userIds);
         }
     }

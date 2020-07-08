@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Get Channel Id by Name", SlackCategory)]
+    [AutoRegisterStep("Get Channel Id by Name", slackCategory)]
     [Writable]
     public class GetChannelIdByName : AbstractStep
     {
@@ -20,7 +20,7 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(string), CHANNEL_NAME) };
+                var data = new DataDescription[] { new DataDescription(typeof(string), channelLabel) };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -29,14 +29,14 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME, new DataDescription(typeof(string), RESULT)) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel, new DataDescription(typeof(string), resultLabel)) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            var channelName = (string)data.Data[CHANNEL_NAME];
+            var channelName = (string)data.Data[AbstractStep.channelLabel];
             return SlackClientApi.GetChannelIdByName(token, channelName);
         }
     }

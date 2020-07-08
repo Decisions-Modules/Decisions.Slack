@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
-    [AutoRegisterStep("Get Channel List", SlackCategory)]
+    [AutoRegisterStep("Get Channel List", slackCategory)]
     [Writable]
     public class GetChannelList : AbstractStep
     {
@@ -20,7 +20,7 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new DataDescription[] { new DataDescription(typeof(bool), EXCLUDE_ARCHIVED) };
+                var data = new DataDescription[] { new DataDescription(typeof(bool), excludeArchivedLabel) };
                 return base.InputData.Concat(data).ToArray();
             }
         }
@@ -29,14 +29,14 @@ namespace Decisions.Slack
         {
             get
             {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(RESULT_OUTCOME, new DataDescription(typeof(SlackChannel[]), RESULT)) };
+                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel, new DataDescription(typeof(SlackChannel[]), resultLabel)) };
                 return base.OutcomeScenarios.Concat(data).ToArray();
             }
         }
 
         protected override Object ExecuteStep(string token, StepStartData data)
         {
-            bool excludeArchived = (bool)data.Data[EXCLUDE_ARCHIVED];
+            bool excludeArchived = (bool)data.Data[AbstractStep.excludeArchivedLabel];
             return SlackClientApi.GetChannelList(token, excludeArchived);
         }
     }
