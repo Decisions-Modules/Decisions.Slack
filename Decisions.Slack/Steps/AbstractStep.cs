@@ -9,6 +9,7 @@ using DecisionsFramework.Design.Properties.Attributes;
 using DecisionsFramework.ServiceLayer.Services.ContextData;
 using DecisionsFramework.ServiceLayer.Services.OAuth2;
 using DecisionsFramework.Utilities.Data;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,8 +18,9 @@ using System.Threading.Tasks;
 
 namespace Decisions.Slack
 {
+
     [Writable]
-    public abstract class AbstractStep : ISyncStep, IDataConsumer, IDataProducer
+    public abstract class AbstractStep : ISyncStep, IDataConsumer, IDataProducer, IValidationSource
     {
         public const string slackCategory = "Integration/Slack Messenger";
 
@@ -69,9 +71,19 @@ namespace Decisions.Slack
         {
             ORM<OAuthToken> orm = new ORM<OAuthToken>();
             var token = orm.Fetch(id);
-            if (token != null)
+            if (token == null)
+                throw new EntityNotFoundException($"Can not find token with TokenId=\"{id}\"");
+
+            if (token.TokenData != null)
                 return token.TokenData;
-            throw new EntityNotFoundException($"Can not find token with TokenId=\"{id}\"");
+
+            if (token.ResponseRawContent != null)
+            {
+                var tokenResponse = JsonConvert.DeserializeObject<SlackOAuth2TokenResponse>(token.ResponseRawContent);
+                return tokenResponse.AuthedUser.AccessToken;
+            }
+            throw new LoggedException($"Token Entity '{token.EntityName}' has no AccessToken itself.");
+
         }
 
         public ResultData Run(StepStartData data)
@@ -99,6 +111,24 @@ namespace Decisions.Slack
 
         protected abstract Object ExecuteStep(string token, StepStartData data);
 
+        public ValidationIssue[] GetValidationIssues()
+        {
+            if (Token == null)
+                return new ValidationIssue[] { new ValidationIssue("Token cannot be null") };
+
+            try
+            {
+                var accessToken = FindAccessToken(Token);
+            }
+            catch (Exception ex)
+            {
+                return new ValidationIssue[] { new ValidationIssue(ex.Message ?? ex.ToString()) };
+            }
+            return new ValidationIssue[0];
+        }
+
     }
+
+
 }
 
