@@ -1,7 +1,9 @@
 ﻿using Decisions.Slack.Utility;
 using DecisionsFramework.Design.Properties;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.Serialization;
 
 namespace Decisions.Slack
@@ -26,6 +28,26 @@ namespace Decisions.Slack
         [DataMember]
         [JsonProperty(PropertyName = "pinned_to")]
         public string[] PinnedTo { get; set; }
+
+        [DataMember]
+        public bool IsPinned { get; set; }
+
+        [DataMember]
+        public DateTime DateTime
+        {
+            get
+            {
+                try
+                {
+                    var timetick = Convert.ToDouble(Timestamp, CultureInfo.InvariantCulture);
+                    return DateTimeUtils.UnixTimeStampToDateTime(timetick);
+                }
+                catch
+                {
+                    return new DateTime(0);
+                }
+            }
+        }
     }
 
     internal class MessageListResponseModel : SlackResponseModel

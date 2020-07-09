@@ -69,6 +69,7 @@
     <Compile Include="Steps\UnpinMessageToChannel.cs" />
     <Compile Include="Utility\SlackClientApi.cs" />
     <Compile Include="Utility\SlackClientApiBase.cs" />
+    <Compile Include="Utility\DateTimeUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json">

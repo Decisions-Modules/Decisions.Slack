@@ -125,7 +125,11 @@ namespace Decisions.Slack.TestSuit
 
                 SlackMessage[] messages1 = SlackClientApi.GetMessagesFromChannel(AccessToken, channelId, 1);
                 Assert.IsTrue(messages1.Length == 1);
-                lastTimestamp = messages1.Last().Timestamp;
+                var msg = messages1.Last();
+                lastTimestamp = msg.Timestamp;
+
+                var dt = msg.DateTime;
+                dt = msg.DateTime;
 
                 SlackMessage[] messages2 = SlackClientApi.GetMessagesFromChannel(AccessToken, channelId, 2, lastTimestamp);
                 Assert.IsTrue(messages2.Length == 2);

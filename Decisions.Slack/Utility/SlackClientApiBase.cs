@@ -71,6 +71,5 @@ namespace Decisions.Slack.Utility
             }
             return res;
         }
-
     }
 }

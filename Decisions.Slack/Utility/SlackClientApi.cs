@@ -205,6 +205,8 @@ namespace Decisions.Slack.Utility
             foreach (var msg in messages)
             {
                 msg.Text = UnescapeSlackText(msg.Text);
+                if (msg.PinnedTo != null)
+                    msg.IsPinned = msg.PinnedTo.Contains(channelId);
             }
             return messages.ToArray();
         }
