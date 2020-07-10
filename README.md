@@ -1,6 +1,6 @@
 # Decisions.Slack Integration
   Slack uses two client type: _Bot_ and _User_. And there are two _AccessTokens_ for them.
-_Bot_'s abilities are more limited compared with _User_. _Bots_ cannot use some API methods like _Search_ and _Create Channel_. So it’s better to get _User Access Token_.
+_Bot_'s abilities are more limited compared with _User_. _Bots_ cannot use some API methods like _Search_ and _Create Channel_. So it’s better to get _User Access Token_. This text explains how to do it.
 
 ### Register your Slack application
 
@@ -14,7 +14,7 @@ First you need to register your client application.
   7. Click ***Allow***
 
 
-### Create a provider for Slack in ***Decisions***
+### Create a provider for Slack OAuth in ***Decisions***
   1. Go to ***System > Integration > OAuth > Providers***   ,  click ***ADD OAUTH PROVIDER***
   2. Fill the form<br />
        &nbsp;&nbsp;   _Token Request URL_: https://slack.com/api/oauth.v2.access<br />
