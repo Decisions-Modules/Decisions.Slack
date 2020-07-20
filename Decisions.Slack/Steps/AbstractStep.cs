@@ -77,9 +77,9 @@ namespace Decisions.Slack
             if (token.TokenData != null)
                 return token.TokenData;
 
-            if (token.FullOAuthResponse != null)
+            if (token.FullAccessTokenResponse != null)
             {
-                var tokenResponse = JsonConvert.DeserializeObject<SlackOAuth2TokenResponse>(token.FullOAuthResponse);
+                var tokenResponse = JsonConvert.DeserializeObject<SlackOAuth2TokenResponse>(token.FullAccessTokenResponse);
                 return tokenResponse.AuthedUser.AccessToken;
             }
             throw new LoggedException($"Token Entity '{token.EntityName}' has no AccessToken itself.");

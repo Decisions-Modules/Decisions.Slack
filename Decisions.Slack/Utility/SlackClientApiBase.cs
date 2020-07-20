@@ -12,7 +12,7 @@ namespace Decisions.Slack.Utility
 {
     static partial class SlackClientApi
     {
-        private static readonly string baseAdress = "https://slack.com/api/";
+        private static readonly string baseAddress = "https://slack.com/api/";
 
         private static AuthenticationHeaderValue GetAuthHeader(string accessToken)
         {
@@ -21,7 +21,7 @@ namespace Decisions.Slack.Utility
 
         private static HttpClient GetClient(string accessToken)
         {
-            HttpClient httpClient = new HttpClient { BaseAddress = new Uri(baseAdress) };
+            HttpClient httpClient = new HttpClient { BaseAddress = new Uri(baseAddress) };
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", "application/json; charset=utf-8");
 
