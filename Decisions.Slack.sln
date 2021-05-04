@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Decisions.Slack", "Decisions.Slack\Decisions.Slack.csproj", "{96921A6A-9830-4D75-8E88-0AFA130EFE00}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Decisions.Slack.TestSuit", "Decisions.Slack.TestSuit\Decisions.Slack.TestSuit.csproj", "{BFD52B03-FC1F-4E53-BFDD-D1C29811D332}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Decisions.Slack.TestSuite", "Decisions.Slack.TestSuite\Decisions.Slack.TestSuite.csproj", "{BFD52B03-FC1F-4E53-BFDD-D1C29811D332}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
