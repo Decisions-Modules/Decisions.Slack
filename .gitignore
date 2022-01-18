@@ -25,3 +25,8 @@ Module.Modified.xml
 *.nupkg
 **/packages/*
 !**/packages/build/
+/.idea/.idea.Decisions.Slack/.idea/.gitignore
+/.idea/.idea.Decisions.Slack/.idea/encodings.xml
+/.idea/.idea.Decisions.Slack/.idea/indexLayout.xml
+/.idea/.idea.Decisions.Slack/.idea/riderModule.iml
+/.idea/.idea.Decisions.Slack/.idea/vcs.xml
