@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DecisionsSDK" Version="7.10.1" />
-    <PackageReference Include="Microsoft.VisualStudio.UnitTesting" Version="11.0.50727.1" />
+    <PackageReference Include="Microsoft.VisualStudio.TestPlatform" Version="14.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Decisions.Slack\Decisions.Slack.csproj" />
