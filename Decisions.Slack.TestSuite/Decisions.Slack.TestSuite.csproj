@@ -7,7 +7,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="DecisionsSDK" Version="7.10.0-beta" />
+    <PackageReference Include="DecisionsSDK" Version="7.10.1" />
     <PackageReference Include="Microsoft.VisualStudio.UnitTesting" Version="11.0.50727.1" />
   </ItemGroup>
   <ItemGroup>
