@@ -3,43 +3,37 @@ using DecisionsFramework.Design.ConfigurationStorage.Attributes;
 using DecisionsFramework.Design.Flow;
 using DecisionsFramework.Design.Flow.Mapping;
 using DecisionsFramework.Design.Properties;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Decisions.Slack
+namespace Decisions.Slack;
+
+[AutoRegisterStep("Pin Message to Channel", slackCategory)]
+[Writable]
+public class PinMessageToChannel : AbstractStep
 {
-    [AutoRegisterStep("Pin Message to Channel", slackCategory)]
-    [Writable]
-    public class PinMessageToChannel : AbstractStep
+    [PropertyHidden]
+    public override DataDescription[] InputData
     {
-        [PropertyHidden]
-        public override DataDescription[] InputData
+        get
         {
-            get
-            {
-                var data = new DataDescription[] { new DataDescription(typeof(string), channelIdLabel), new DataDescription(typeof(string), messageTimestampLabel), };
-                return base.InputData.Concat(data).ToArray();
-            }
+            var data = new DataDescription[] { new DataDescription(typeof(string), channelIdLabel), new DataDescription(typeof(string), messageTimestampLabel), };
+            return base.InputData.Concat(data).ToArray();
         }
+    }
 
-        public override OutcomeScenarioData[] OutcomeScenarios
+    public override OutcomeScenarioData[] OutcomeScenarios
+    {
+        get
         {
-            get
-            {
-                var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel) };
-                return base.OutcomeScenarios.Concat(data).ToArray();
-            }
+            var data = new OutcomeScenarioData[] { new OutcomeScenarioData(resultOutcomeLabel) };
+            return base.OutcomeScenarios.Concat(data).ToArray();
         }
+    }
 
-        protected override Object ExecuteStep(string token, StepStartData data)
-        {
-            string channelId = (string)data.Data[AbstractStep.channelIdLabel];
-            string timestamp = (string)data.Data[messageTimestampLabel];
-            SlackClientApi.PinMessage(token, channelId, timestamp);
-            return null;
-        }
+    protected override Object ExecuteStep(string token, StepStartData data)
+    {
+        string channelId = (string)data.Data[AbstractStep.channelIdLabel];
+        string timestamp = (string)data.Data[messageTimestampLabel];
+        SlackClientApi.PinMessage(token, channelId, timestamp);
+        return null;
     }
 }
