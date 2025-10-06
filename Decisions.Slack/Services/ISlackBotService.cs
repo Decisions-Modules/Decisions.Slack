@@ -11,5 +11,4 @@ public interface ISlackBotService
 
     [OperationContract]
     void DisconnectBot(AbstractUserContext userContext, SlackBot bot);
-
 }

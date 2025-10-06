@@ -73,7 +73,9 @@ public class SlackBot : AbstractFolderEntity, INotifyPropertyChanged
         }
     }
     
-    [ElementRegistrationPickerEditor(ElementType.Flow, "Pick Message Handler Flow", BehaviorTypeName = "Decisions.Slack.FlowBehaviors.SlackBotMessageHandlerFlowBehavior", ShowEditorWithLinks = true, Actions = PickerActions.Default)]
+    [ElementRegistrationPickerEditor(ElementType.Flow, "Pick Message Handler Flow", 
+        BehaviorTypeName = "Decisions.Slack.FlowBehaviors.SlackBotMessageHandlerFlowBehavior", 
+        ShowEditorWithLinks = true, Actions = PickerActions.All)]
     [PropertyClassification(12, "Message Handler Flow")]
     public string HandlerFlow 
     {
@@ -89,7 +91,7 @@ public class SlackBot : AbstractFolderEntity, INotifyPropertyChanged
     {
         return
         [
-            new EditEntityAction(this.GetType(), "Edit", "Edits Slack Bot")
+            new EditEntityAction(GetType(), "Edit", "Edits Slack Bot")
         ];
     }
 

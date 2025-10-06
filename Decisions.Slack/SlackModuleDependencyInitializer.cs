@@ -29,10 +29,7 @@ public class SlackModuleDependencyInitializer : IModuleDependencyInitializer
             typeof(SlackBotsFolderBehavior).FullName);
     }
 
-    public void OnDependencyRemoved(string projectId)
-    {
-        
-    }
+    public void OnDependencyRemoved(string projectId) { }
 
     #region ID Helpers
     
