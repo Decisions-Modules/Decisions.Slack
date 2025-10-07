@@ -1,0 +1,39 @@
+using Decisions.Slack.Services;
+using DecisionsFramework.Data.ORMapper;
+using DecisionsFramework.ServiceLayer;
+using DecisionsFramework.ServiceLayer.Services.Folder;
+using DecisionsFramework.ServiceLayer.Services.Projects;
+using DecisionsFramework.ServiceLayer.Utilities;
+
+namespace Decisions.Slack;
+
+public class SlackBotInitializer : IInitializable
+{
+    public void Initialize()
+    {
+        SystemUserContext suc = new();
+        
+        // Initialize bots for projects
+        ProjectDto[] projects = ProjectViewService.Instance.GetProjects(suc);
+        foreach (ProjectDto project in projects ?? [])
+        {
+            string projectId = project.Id;
+            string folderId = SlackModuleDependencyInitializer.GetSlackBotsFolderId(projectId);
+            if (!string.IsNullOrEmpty(projectId) && FolderService.Instance.Exists(suc, folderId))
+            {
+                Folder folder = new ORM<Folder>().Fetch(folderId);
+                if (folder != null)
+                {
+                    SlackBot[] bots = folder.GetEntitiesOfType<SlackBot>();
+                    foreach (SlackBot bot in bots)
+                    {
+                        if (bot.Enabled)
+                        {
+                            SlackBotService.Instance.InitializeBot(suc, bot);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

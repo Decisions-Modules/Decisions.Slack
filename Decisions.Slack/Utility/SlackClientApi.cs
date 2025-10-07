@@ -1,35 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using Newtonsoft.Json;
-using Decisions.Slack.Utility;
-using Microsoft.Win32.SafeHandles;
-using System.Text;
-using System.Threading;
-using System.Runtime.CompilerServices;
-using DecisionsFramework.ServiceLayer.Services.DBQuery;
+﻿namespace Decisions.Slack.Utility;
 
-namespace Decisions.Slack.Utility
-{
-    internal static class SlackEndpointNames
-    {
-        public const string postMessage = "chat.postMessage";
-        public const string createChannel = "conversations.create";
-        public const string inviteToChannel = "conversations.invite";
-        public const string conversationsList = "conversations.list";
-        public const string conversationsMembers = "conversations.members";
-        public const string conversationsHistory = "conversations.history";
-        public const string conversationsOpen = "conversations.open"; // post direct message to user-s
-        public const string archiveChannel = "conversations.archive";
-        public const string searchInChannels = "search.messages";
-        public const string deleteMsgFromChannel = "chat.delete";
-        public const string usersInfo = "users.info";
-        public const string pinMsgToChannel = "pins.add";
-        public const string removePinMsgToChannel = "pins.remove";
-    }
-
-    public static partial class SlackClientApi
+public static partial class SlackClientApi
     {
         private static int _paginationLimit = 100;
         public static int PaginationLimit
@@ -134,7 +105,6 @@ namespace Decisions.Slack.Utility
         /// </summary>
         /// <param name="token">Access token</param>
         /// <param name="channelId">Id of channel</param>
-
         public static void ArchiveChannel(string token, string channelId)
         {
             channelId = Uri.EscapeDataString(channelId);
@@ -311,9 +281,7 @@ namespace Decisions.Slack.Utility
                 it.Text = UnescapeSlackText(it.Text);
             return res.ToArray();
         }
-
-
-
+        
         private static Dictionary<string, string> GetChannelsDictionary(string token)
         {
             var channels = GetChannelList(token, true);
@@ -324,7 +292,4 @@ namespace Decisions.Slack.Utility
 
             return channelsNamesDictionary;
         }
-
-
     }
-}

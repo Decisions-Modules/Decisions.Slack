@@ -1,19 +1,22 @@
 {
-    "Resources": {
-	  "NoComponents": true,
-      "CoreServicesDlls": [
-			"./Decisions.Slack/obj/Decisions.Slack.dll"
-	  ],
-      "CliDlls": null,
-      "WebPages": null,
-      "SilverlightDlls": null,
-      "AgentDlls": null,
-      "InstallScript": null,
-      "SqlScripts": null,
-      "ObjectsToImport": null,
-      "MsSqlScript": null
-    },
-    "Version": "9.0.0",
-    "ImagePath": "./image.png",
-    "Description": "Module to use Slack messenger."
-  }
+  "Resources": {
+    "NoComponents": true,
+    "CoreServicesDlls": [
+      "./Decisions.Slack/obj/Decisions.Slack.dll"
+    ],
+    "ReferenceDlls": [
+      "./Decisions.Slack/obj/SlackNet.dll"
+    ],
+    "CliDlls": null,
+    "WebPages": null,
+    "SilverlightDlls": null,
+    "AgentDlls": null,
+    "InstallScript": null,
+    "SqlScripts": null,
+    "ObjectsToImport": null,
+    "MsSqlScript": null
+  },
+  "Version": "9.17.0",
+  "ImagePath": "./image.png",
+  "Description": "Module to use Slack messenger."
+}
