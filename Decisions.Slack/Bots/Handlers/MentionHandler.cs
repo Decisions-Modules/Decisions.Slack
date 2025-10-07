@@ -21,14 +21,14 @@ public class MentionHandler : IEventHandler<MessageEvent>
     {
         if (bot.ApiClient == null)
         {
-            log.Error($"Failed to create ApiClient for SlackBot Id: {bot.GetEntityId()}");
-            return;
+            throw new ArgumentNullException($"API Client cannot be null for SlackBot ID: {bot.GetEntityId()}" + 
+                                            "Please validation the bot's configuration.");
         }
 
         if (string.IsNullOrEmpty(bot.BotUserId))
         {
-            log.Error($"Could not authenticate bot for SlackBot Id: {bot.GetEntityId()}");
-            return;
+            throw new ArgumentNullException($"User ID cannot be null for SlackBot ID: {bot.GetEntityId()}. " +
+                                            "Please validation the bot's configuration.");
         }
 
         _bot = bot;
@@ -50,20 +50,16 @@ public class MentionHandler : IEventHandler<MessageEvent>
         
         // Run Flow
         Flow processingFlow = FlowEngine.LoadFlowByID(_bot.HandlerFlow, false, true);
-        string flowTrackingId = FlowEngine.Start(processingFlow, new FlowStateData(data.ToArray()), false);
-       
-        // Pop instruction to be returned
-        FlowExecutionStateInstruction instruction = FlowEngine.GetInstructionForCurrentUser(flowTrackingId);
+        FlowCompletedInstruction completedInstruction = FlowEngine.StartSyncFlow(processingFlow, new FlowStateData(data.ToArray()));
         
         // Get the return value
         DataPair responseFromFlow = new();
-        if (instruction is FlowCompletedInstruction)
+        if (completedInstruction != null)
         {
-            FlowCompletedInstruction result = (FlowCompletedInstruction)instruction;
-            
-            if (result.ResultData != null && result.ResultData.Length > 0)
+            if (completedInstruction.ResultData != null && completedInstruction.ResultData.Length > 0)
             {
-                responseFromFlow = result.ResultData.FirstOrDefault(x => x.Name == SlackBotConstants.RESPONSE_PARAM) ?? new();
+                responseFromFlow = completedInstruction.ResultData.FirstOrDefault(
+                    x => x.Name == SlackBotConstants.RESPONSE_PARAM) ?? new();
             }
         }
         
