@@ -26,7 +26,7 @@ public class SlackBot : AbstractFolderEntity, INotifyPropertyChanged
     [PropertyHidden] public ISlackApiClient? ApiClient { get; set; }
     [PropertyHidden] public string? BotUserId { get; set; }
     
-    [ORMPrimaryKeyField]
+    [WritableValue, ORMPrimaryKeyField]
     private string id;
     
     [ExcludeInDescription]

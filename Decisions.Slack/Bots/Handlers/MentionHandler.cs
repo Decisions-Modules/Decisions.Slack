@@ -22,13 +22,13 @@ public class MentionHandler : IEventHandler<MessageEvent>
         if (bot.ApiClient == null)
         {
             throw new ArgumentNullException($"API Client cannot be null for SlackBot ID: {bot.GetEntityId()}" + 
-                                            "Please validation the bot's configuration.");
+                                            "Please validate the bot's configuration.");
         }
 
         if (string.IsNullOrEmpty(bot.BotUserId))
         {
             throw new ArgumentNullException($"User ID cannot be null for SlackBot ID: {bot.GetEntityId()}. " +
-                                            "Please validation the bot's configuration.");
+                                            "Please validate the bot's configuration.");
         }
 
         _bot = bot;
