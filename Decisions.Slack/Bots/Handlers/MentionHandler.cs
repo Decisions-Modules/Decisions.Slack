@@ -1,3 +1,4 @@
+using Decisions.Slack.Data;
 using Decisions.Slack.Utility;
 using DecisionsFramework;
 using DecisionsFramework.Design.Flow;
@@ -46,7 +47,8 @@ public class MentionHandler : IEventHandler<MessageEvent>
         List<KeyValuePair<string, object>> data = new List<KeyValuePair<string, object>>();
         data.Add(new KeyValuePair<string, object>(SlackBotConstants.MESSAGE_INPUT , slackEvent.Text));
         data.Add(new KeyValuePair<string, object>(SlackBotConstants.CHANNEL_INPUT, slackEvent.Channel));
-        data.Add(new KeyValuePair<string, object>(SlackBotConstants.USER_INPUT, slackEvent.User));;
+        data.Add(new KeyValuePair<string, object>(SlackBotConstants.USER_INPUT, slackEvent.User));
+        data.Add(new KeyValuePair<string, object>(SlackBotConstants.THREAD_TIMESTAMP_INPUT, slackEvent.Ts ?? string.Empty));
         
         // Run Flow
         Flow processingFlow = FlowEngine.LoadFlowByID(_bot.HandlerFlow, false, true);
@@ -67,11 +69,30 @@ public class MentionHandler : IEventHandler<MessageEvent>
         string? response = responseFromFlow.OutputValue.ToString();
         if (!string.IsNullOrEmpty(response))
         {
-            await _api.Chat.PostMessage(new Message
-            {
-                Channel = slackEvent.Channel,
-                Text = responseFromFlow.OutputValue.ToString()
-            });
+            await SendResponse(slackEvent, response);
+        }
+    }
+
+    private async Task SendResponse(MessageEvent slackEvent, string response)
+    {
+        switch (_bot.ResponseType)
+        {
+            case SlackResponseType.Thread:
+                await _api.Chat.PostMessage(new Message
+                {
+                    Channel = slackEvent.Channel,
+                    Text = response,
+                    ThreadTs = slackEvent.Ts // Reply in thread using the original message timestamp
+                });
+                break;
+            default:
+                // Default to channel response
+                await _api.Chat.PostMessage(new Message
+                {
+                    Channel = slackEvent.Channel,
+                    Text = response
+                });
+                break;
         }
     }
 }
