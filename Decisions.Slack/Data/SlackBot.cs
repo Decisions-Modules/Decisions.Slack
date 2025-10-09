@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Decisions.Slack.Data;
 using Decisions.Slack.Services;
 using DecisionsFramework.Data.ORMapper;
 using DecisionsFramework.Design.ConfigurationStorage.Attributes;
@@ -21,6 +22,7 @@ public class SlackBot : AbstractFolderEntity, INotifyPropertyChanged
     [WritableValue, ORMField] private string botToken;
     [WritableValue, ORMField] private string handlerFlowId;
     [WritableValue, ORMField] private bool enabled;
+    [WritableValue, ORMField] private SlackResponseType responseType = SlackResponseType.Channel;
 
     [PropertyHidden] public ISlackSocketModeClient? Client { get; set; }
     [PropertyHidden] public ISlackApiClient? ApiClient { get; set; }
@@ -85,6 +87,17 @@ public class SlackBot : AbstractFolderEntity, INotifyPropertyChanged
             handlerFlowId = value;
             OnPropertyChanged();
         } 
+    }
+    
+    [PropertyClassification(13, "Response Type")]
+    public SlackResponseType ResponseType
+    {
+        get => responseType;
+        set
+        {
+            responseType = value;
+            OnPropertyChanged();
+        }
     }
     
     public override BaseActionType[] GetActions(AbstractUserContext userContext, EntityActionType[] types)
