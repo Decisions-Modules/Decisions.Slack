@@ -8,6 +8,7 @@
 *.ps1.error
 .vs/*
 Module.Modified.xml
+Decisions.Slack.TestSuite/**
 
 # Build results
 **/[Dd]ebug/
