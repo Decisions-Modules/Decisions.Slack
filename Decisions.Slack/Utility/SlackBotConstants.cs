@@ -8,4 +8,5 @@ public class SlackBotConstants
     public const string USER_INPUT = "User";
     public const string SLACK_BOT_CACHE_NAME = "SlackBotCache";
     public const string THREAD_TIMESTAMP_INPUT = "ThreadTimestamp";
+    public const string SLACK_MODULE_NAME = "Decisions.Slack";
 }

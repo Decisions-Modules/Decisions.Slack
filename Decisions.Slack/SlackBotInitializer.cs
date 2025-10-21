@@ -1,4 +1,6 @@
+using Decisions.Slack.FolderBehaviors;
 using Decisions.Slack.Services;
+using Decisions.Slack.Utility;
 using DecisionsFramework.Data.ORMapper;
 using DecisionsFramework.ServiceLayer;
 using DecisionsFramework.ServiceLayer.Services.Folder;
@@ -19,19 +21,40 @@ public class SlackBotInitializer : IInitializable
         {
             string projectId = project.Id;
             string folderId = SlackModuleDependencyInitializer.GetSlackBotsFolderId(projectId);
-            if (!string.IsNullOrEmpty(projectId) && FolderService.Instance.Exists(suc, folderId))
+            
+            if (!string.IsNullOrEmpty(projectId))
             {
-                Folder folder = new ORM<Folder>().Fetch(folderId);
-                if (folder != null)
+                if (FolderService.Instance.Exists(suc, folderId))
                 {
-                    SlackBot[] bots = folder.GetEntitiesOfType<SlackBot>();
-                    foreach (SlackBot bot in bots)
+                    Folder folder = new ORM<Folder>().Fetch(folderId);
+                    if (folder != null)
                     {
-                        if (bot.Enabled)
+                        SlackBot[] bots = folder.GetEntitiesOfType<SlackBot>();
+                        foreach (SlackBot bot in bots)
                         {
-                            SlackBotService.Instance.InitializeBot(suc, bot);
+                            if (bot.Enabled)
+                            {
+                                SlackBotService.Instance.InitializeBot(suc, bot);
+                            }
                         }
                     }
+                }
+                else if (ProjectUtility.IsDependentModule(projectId, SlackBotConstants.SLACK_MODULE_NAME))
+                {
+                    // Main Integrations->Slack Folder
+                    string slackFolderId = SlackModuleDependencyInitializer.GetSlackFolderId(projectId);
+                    FolderStructureHelper.CreateFolderIfNotExistsAndSendEvent(suc, 
+                        FolderStructureHelper.GetIntegrationsFolderId(projectId),
+                        slackFolderId,
+                        SlackFolderBehavior.NAME,
+                        typeof(SlackFolderBehavior).FullName);
+        
+                    // Integrations->Slack->Bots
+                    FolderStructureHelper.CreateFolderIfNotExistsAndSendEvent(suc,
+                        slackFolderId,
+                        SlackModuleDependencyInitializer.GetSlackBotsFolderId(projectId),
+                        SlackBotsFolderBehavior.NAME, 
+                        typeof(SlackBotsFolderBehavior).FullName);
                 }
             }
         }
