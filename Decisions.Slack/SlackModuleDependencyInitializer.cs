@@ -30,7 +30,7 @@ public class SlackModuleDependencyInitializer : IModuleDependencyInitializer
     }
 
     public void OnDependencyRemoved(string projectId) { }
-
+    
     #region ID Helpers
     
     // Integrations->Slack
