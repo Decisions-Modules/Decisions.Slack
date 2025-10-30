@@ -14,7 +14,10 @@
     "InstallScript": null,
     "SqlScripts": null,
     "ObjectsToImport": null,
-    "MsSqlScript": null
+    "MsSqlScript": null,
+    "CustomImages": [
+			"./icons/*.*"
+		]
   },
   "Version": "9.17.0",
   "ImagePath": "./image.png",
