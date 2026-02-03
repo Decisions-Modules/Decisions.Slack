@@ -39,6 +39,10 @@ public class MentionHandler : IEventHandler<MessageEvent>
 
     public async Task Handle(MessageEvent slackEvent)
     {
+        // Ignore messages from the bot itself to prevent infinite loops
+        if (slackEvent.User == _botUserId)
+            return;
+        
         // Only handle mentions
         if (string.IsNullOrEmpty(slackEvent.Text) || !slackEvent.Text.Contains($"<@{_botUserId}>"))
             return;
