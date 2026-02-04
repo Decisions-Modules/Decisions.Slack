@@ -12,17 +12,16 @@ public class SlackBotsFolderBehavior : DefaultFolderBehavior, ILookAndFeelProvid
     public override string FolderBehaviorName => NAME;
     public override bool IsExportable(Folder f) => true;
     public override bool ExportChildrenOnly(Folder f) => false;
+    public override bool CanBeFavorites => false;
 
     public override BaseActionType[] GetFolderActions(Folder folder, BaseActionType[] proposedActions, EntityActionType[] types)
     {
         List<BaseActionType> actions = new List<BaseActionType>();
-        actions.AddRange(base.GetFolderActions(folder, proposedActions, types));
 
-        actions.AddRange([
+        actions.Add(
             new AddEntityAction(typeof(SlackBot), "Add Bot", "Adds a new Slack Bot entity", null, "Add Slack Bot")
                 { Order = 5, DisplayType = ActionDisplayType.Primary }
-
-        ]);
+        );
 
         return actions.ToArray();
     }

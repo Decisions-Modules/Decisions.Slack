@@ -77,7 +77,7 @@ public class SlackBot : AbstractFolderEntity, INotifyPropertyChanged
     
     [ElementRegistrationPickerEditor(ElementType.Flow, "Pick Message Handler Flow", 
         BehaviorTypeName = "Decisions.Slack.FlowBehaviors.SlackBotMessageHandlerFlowBehavior", 
-        ShowEditorWithLinks = true, Actions = PickerActions.All)]
+        ShowEditorWithLinks = true, Actions = PickerActions.Pick)]
     [PropertyClassification(12, "Message Handler Flow")]
     public string HandlerFlow 
     {
