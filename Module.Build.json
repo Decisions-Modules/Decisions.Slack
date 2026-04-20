@@ -1,4 +1,4 @@
-{
+﻿{
   "Resources": {
     "NoComponents": true,
     "CoreServicesDlls": [
@@ -19,7 +19,7 @@
 			"./icons/*.*"
 		]
   },
-  "Version": "9.17.0",
+  "Version": "10.0.0",
   "ImagePath": "./image.png",
   "Description": "Module to use Slack messenger."
 }
